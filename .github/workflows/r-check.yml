@@ -33,3 +33,6 @@ jobs:
       - name: Shared experiment configuration
         working-directory: reproduction
         run: Rscript --vanilla tests/test_experiment_configuration.R
+      - name: Main-text scope and fixed numerical fixtures
+        working-directory: reproduction
+        run: Rscript --vanilla tests/test_main_text_scope.R

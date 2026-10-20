@@ -125,3 +125,23 @@ preparation, changed-source rejection, compatibility checkpoint/resume and
 failure handling, main-results collection fixtures, and existing smoke tests.
 These are software checks, not new Monte Carlo studies. No simulations or
 application fits were run for this consolidation.
+
+## Main-text dependency cleanup (October 20, 2026)
+
+The experiment engines now retain only the paper's RKHS/Riesz learner, fixed
+spline threshold class, and X-adjusted comparators. The additional continuous
+sensitivity values use settings 1–3; setting 4 remains in the Lambda 2/3 batch.
+Development-only learner branches, supplementary runs, and obsolete launchers
+were removed. The installable package was not changed.
+
+Against the pre-cleanup sources, 357 retained function bodies and argument
+definitions matched exactly after removing source-location attributes.
+The plug-in evaluation body and retained contract values also matched.
+Specialized loaders/providers were checked with fixed spline fixtures and
+mocked fitting calls. Configuration, collection, population-identity fixtures,
+band-calibration smoke tests, and compatibility checkpoint/resume tests passed.
+All reproduction R files parsed successfully.
+
+No new simulations or application fits were run. This verifies code and
+configuration preservation for the selected main-text workflows, not a fresh
+numerical reproduction of the published Monte Carlo results.

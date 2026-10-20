@@ -1,5 +1,5 @@
 source('scripts/common.R')
-source('R/x5_simple_population_targets.R')
+source('R/design.R');source('R/nuisance_models.R');source('R/rkhs_gamma.R');source('R/estimation_inference.R');source('R/threshold_splines.R');source('R/population_targets.R')
 c<-stress_config();out<-'results/population_targets.rds'
 if(file.exists(out))stop('Targets already exist; refusing overwrite.')
 shape<-function(x)1+.6*sin(x$X1*x$X2)+.4*sin(x$X3*x$X4)
@@ -22,7 +22,7 @@ corner<-as.data.frame(expand.grid(rep(list(c(-2,2)),5)));names(corner)<-paste0('
 interior<-data.frame(X1=1.8,X2=pi/3.6,X3=1.8,X4=pi/3.6,X5=1.8)
 support<-rbind(x5p_rule(16384L,9821),corner,interior)
 rows<-list();details<-list()
-for(j in 1:4)for(L in c$Lambdas)for(cl in c$classes) {
+for(j in seq_len(nrow(c$settings)))for(L in c$Lambdas)for(cl in c$classes) {
  a<-c$settings$a[j];b<-c$settings$b[j];compatible<-stress_compatible(j,L)
  sampled_slack<-slack(support,a,b,L)
  if(!compatible) {

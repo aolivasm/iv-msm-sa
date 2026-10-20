@@ -25,7 +25,7 @@ config <- n12_config()
 tasks <- n12_tasks(config)
 stopifnot(config$n == 12000L, config$reps == 500L,
   identical(config$Lambda, c(1, 1.1)),
-  identical(config$methods, c('rkhs', 'growing_direct')),
+  identical(config$methods, 'rkhs'),
   identical(tasks$id, seq_len(5000L)), nrow(tasks) == 5000L,
   all(tasks$n == 12000L),
   identical(as.character(tasks$outcome), rep(c('continuous', 'binary'), each = 2500L)),
@@ -51,8 +51,7 @@ for (outcome in c('continuous', 'binary')) {
       'glmnet_interactions', 'ranger', 'xgboost')),
     identical(contract$methods, config$methods),
     isFALSE(contract$projection_applied), contract$q_fits == 0L,
-    isFALSE(contract$classification_gamma), isFALSE(contract$pmf_ratio_gamma),
-    contract$growing_direct$cv_repeats == 2L)
+    isFALSE(contract$classification_gamma), isFALSE(contract$pmf_ratio_gamma))
   if (outcome == 'continuous') stopifnot(
     identical(contract$rkhs$bandwidth_multipliers, c(.25, .5, 1, 2, 4)),
     contract$rkhs$cv_repeats == 1L) else stopifnot(
@@ -66,13 +65,13 @@ parent_generators <- list()
 continuous <- new.env(parent = globalenv())
 continuous_root <- file.path('frozen', 'continuous', 'R')
 for (name in c('siv_normalizer', 'siv_gamma'))
-  n12_test_extract(file.path(continuous_root, 'scalar_iv_population_experiment.R'), name, continuous)
+  n12_test_extract(file.path(continuous_root, if(name=='siv_gamma')'rkhs_gamma.R'else 'design.R'), name, continuous)
 for (name in c('x5s_contract', 'x5s_oracle', 'x5s_generate'))
-  n12_test_extract(file.path(continuous_root, 'x5_simple_study.R'), name, continuous)
-n12_test_extract(file.path(continuous_root, 'x5_growing_gamma.R'), 'x5g_generate', continuous)
+  n12_test_extract(file.path(continuous_root, 'design.R'), name, continuous)
+n12_test_extract(file.path(continuous_root, 'design.R'), 'x5g_generate', continuous)
 binary <- new.env(parent = globalenv())
 binary$config <- readRDS('frozen/binary/study_config.rds')
-n12_test_extract('frozen/binary/provenance/binary_stress_common.R', 'generate', binary)
+n12_test_extract('frozen/binary/R/session.R', 'generate', binary)
 for (outcome in c('continuous', 'binary')) {
   adapter <- n12_adapter_new(getwd(), outcome)
   ids <- tasks$id[tasks$outcome == outcome & tasks$replication == 1L]
@@ -104,7 +103,7 @@ for (outcome in c('continuous', 'binary')) {
 for (outcome in c('continuous', 'binary')) {
   environment <- new.env(parent = globalenv())
   calibrate <- n12_test_extract(file.path('frozen', outcome, 'R',
-    'learned_witness_compatibility_test.R'), 'calibrate_learned_witness_maximum', environment)
+    'compatibility_test.R'), 'calibrate_learned_witness_maximum', environment)
   grid <- if (outcome == 'continuous') c(1, 1.1, 1.25, 1.5, 1.8, 2) else
     c(1, 1.1, 1.3, 1.5, 2)
   metadata <- data.frame(Lambda0 = rep(grid, each = 8L),
@@ -128,21 +127,10 @@ for (outcome in c('continuous', 'binary')) {
       unname(subset$bootstrap), tolerance = 1e-13)), identical(.Random.seed, rng))
 }
 
-# Account-quota tests use the actual LPC Fileset layout and no external query.
-quota_env <- new.env(parent=globalenv())
-sys.source('scripts/storage.R',quota_env)
-quota_env$file.exists <- function(...)TRUE
-quota_env$file.access <- function(...)0L
-quota_env$quota_row <- 'mmfs1 sas1-homeFS USR 67.15G 100G 104.6G 1.426G none 614966 0 0 335 none arcamgr01.pixstor'
-quota_env$system2 <- function(...)quota_env$quota_row
-invisible(capture.output(q <- quota_env$n12_check_storage()))
-stopifnot(abs(q$available_bytes/1024^3-31.424)<1e-8)
-legacy <- quota_env$n12_parse_quota('mmfs1 USR 67.15G 100G 104.6G 1.426G none')
-stopifnot(identical(q$available_bytes,legacy$available_bytes))
-quota_env$quota_row <- 'mmfs1 sas1-homeFS USR 97G 100G 104.6G 2G none 614966 0 0 335 none arcamgr01.pixstor'
-invisible(capture.output(n12_test_expect_error(quota_env$n12_check_storage(),'Insufficient GPFS')))
-n12_test_expect_error(quota_env$n12_parse_quota('mmfs1 a b USR 1G 100G 100G 0 none'))
-
+# A second MOCK method exercises generic partial-resume bookkeeping only.
+# It is not a learner available in the paper configuration.
+config$methods <- c('rkhs','mock_second')
+paper_profile$config <- config
 test_directory <- tempfile('x5_n12000_unit_')
 dir.create(test_directory)
 signature <- list(config = config, manifest = c('unit-fixture' = 'test-only'),
@@ -209,9 +197,9 @@ partial$records <- partial$records['rkhs']
 n12_atomic(partial, checkpoint_path(1L))
 calls$fit <- character()
 resumed <- quiet_run(1L)
-stopifnot(identical(calls$fit, 'growing_direct'),
+stopifnot(identical(calls$fit, 'mock_second'),
   identical(resumed$records$rkhs, first$records$rkhs),
-  identical(resumed$records$rkhs$paired, resumed$records$growing_direct$paired))
+  identical(resumed$records$rkhs$paired, resumed$records$mock_second$paired))
 hash <- tools::md5sum(checkpoint_path(1L))
 stopifnot(identical(quiet_run(1L, never_fit), resumed),
   identical(hash, tools::md5sum(checkpoint_path(1L))))
@@ -244,7 +232,7 @@ for (index in seq_along(c('data', 'folds', 'primitives'))) {
     adapter <- mock_factory(...); original <- adapter$run
     adapter$run <- function(data, method, seed) {
       fit <- original(data, method, seed)
-      if (method == 'growing_direct') {
+      if (method == 'mock_second') {
         if (field == 'primitives') fit$paired$primitives[1L] <- n12_fingerprint('different') else
           fit$paired[[field]] <- n12_fingerprint('different')
       }
@@ -254,7 +242,7 @@ for (index in seq_along(c('data', 'folds', 'primitives'))) {
   }})
   mismatch <- quiet_run(3L + index, mismatch_factory)
   stopifnot(isTRUE(mismatch$records$rkhs$success),
-    isFALSE(mismatch$records$growing_direct$success),
+    isFALSE(mismatch$records$mock_second$success),
     identical(mismatch, quiet_run(3L + index, never_fit)))
 }
 prior <- quiet_run(7L)
@@ -262,7 +250,7 @@ prior$records <- prior$records['rkhs']
 n12_atomic(prior, checkpoint_path(7L))
 resumed_mismatch <- quiet_run(7L, mismatch_factory)
 stopifnot(identical(resumed_mismatch$records$rkhs, prior$records$rkhs),
-  isFALSE(resumed_mismatch$records$growing_direct$success),
+  isFALSE(resumed_mismatch$records$mock_second$success),
   identical(resumed_mismatch, quiet_run(7L, never_fit)))
 warning_factory <- function(...) {
   adapter <- mock_factory(...); original <- adapter$run
@@ -319,7 +307,7 @@ cli_root <- file.path(test_directory, 'cli_bundle')
 dir.create(file.path(cli_root, 'scripts'), recursive = TRUE)
 cli_files <- file.path('scripts', c('common.R', 'adapters.R', 'run.R'))
 stopifnot(all(file.copy(cli_files, file.path(cli_root, cli_files))))
-stopifnot(file.copy('paper_config.R', file.path(cli_root, 'paper_config.R')))
+writeLines(c('paper_profile <-',capture.output(dput(paper_profile))),file.path(cli_root,'paper_config.R'))
 n12_atomic(config, file.path(cli_root, 'study_config.rds'))
 cli_manifest <- tools::md5sum(file.path(cli_root, c(cli_files, 'study_config.rds')))
 names(cli_manifest) <- c(cli_files, 'study_config.rds')

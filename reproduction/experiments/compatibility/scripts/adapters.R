@@ -8,10 +8,10 @@ n12_adapter_contract <- function(outcome) {
     outcome = outcome,
     frozen_parent = if (outcome == 'continuous') 'x5_compatibility_lpc_v1' else
       'binary_x5_compatibility_mac_v1',
-    methods = c('rkhs', 'growing_direct'),
+    methods = 'rkhs',
     parent_method_names = if (outcome == 'continuous')
-      c(rkhs = 'rkhs_tuned', growing_direct = 'growing_direct') else
-      c(rkhs = 'rkhs', growing_direct = 'growing_direct'),
+      c(rkhs = 'rkhs_tuned') else
+      c(rkhs = 'rkhs'),
     folds = 5L, bootstrap = 399L, multiplier = 'Gaussian',
     allocation_df = 5L, positivity_epsilon = .05,
     primitive_learner = if (outcome == 'continuous') 'super_learner' else
@@ -31,11 +31,6 @@ n12_adapter_contract <- function(outcome) {
       penalty = 'lambda = C/sqrt(n_t)', C = 10^seq(-1.5, 1, by = .5),
       cv_folds = 3L, cv_repeats = if (outcome == 'continuous') 1L else 2L,
       selection_rule = 'minimum'),
-    growing_direct = list(
-      backend = 'growing_sparse_tensor_spline_riesz',
-      level_budget = 'max(2L, floor(log2(n_t)/2)-1L)',
-      penalty = 'lambda = C/sqrt(n_t)', C = 10^seq(-1.5, 1, by = .5),
-      cv_folds = 3L, cv_repeats = 2L, selection_rule = 'minimum'),
     normalization = 'Frozen positive prediction and baseline-stratum mean normalization',
     projection_applied = FALSE, q_fits = 0L,
     classification_gamma = FALSE, pmf_ratio_gamma = FALSE,

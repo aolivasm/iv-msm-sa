@@ -22,8 +22,8 @@ keys<-if(args[2]%in%names(profiles))args[2] else
 if(!length(keys))stop('Unknown analysis/configuration. Run paper.R plan.')
 if(args[3]=='task') {
   if(length(args)!=4L||!grepl('^[1-9][0-9]*$',args[4]))stop('Supply one positive task ID.')
-  if(any(as.integer(args[4])>vapply(profiles[keys],`[[`,integer(1),'tasks')))
-    stop('Task ID exceeds a selected configuration. Select a specific configuration.')
+  keys<-keys[as.integer(args[4])<=vapply(profiles[keys],`[[`,integer(1),'tasks')]
+  if(!length(keys))stop('Task ID exceeds the selected configuration(s).')
 } else if(length(args)!=3L)stop('Unexpected arguments.')
 root<-normalizePath('.');prepare_experiments(root,keys)
 for(key in keys) {

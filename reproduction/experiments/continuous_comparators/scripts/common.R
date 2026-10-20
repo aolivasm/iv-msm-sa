@@ -1,10 +1,4 @@
-# Standalone paired stress comparator bookkeeping; no baseline writes.
-source('R/x5_simple_study.R')
-# Evaluate ONLY the exact generator from the frozen LPC source, not its learners.
-ast<-parse('R/x5_growing_gamma_frozen.R')
-definition<-Filter(function(v)is.call(v)&&identical(v[[1]],as.name('<-'))&&
- identical(v[[2]],as.name('x5g_generate')),as.list(ast))
-stopifnot(length(definition)==1L);eval(definition[[1]])
+source('R/design.R')
 source('paper_config.R')
 config<-paper_profile$config
 tasks<-data.frame(setting=rep(seq_len(nrow(config$settings)),each=config$repetitions),

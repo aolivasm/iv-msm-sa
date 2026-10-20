@@ -3,20 +3,20 @@ source('scripts/common.R')
 args<-commandArgs(TRUE);stage<-if(length(args))args[1] else 'preflight'
 stopifnot(stage%in%c('preflight','task','check_gate','collect'))
 manifest<-readRDS('manifest.rds');stopifnot(identical(manifest,tools::md5sum(names(manifest))))
-source('R/x5_growing_gamma.R');source('R/x5_simple_thresholds.R');source('R/x5_adaptive_gamma_provider.R')
+source('R/design.R');source('R/nuisance_models.R');source('R/rkhs_gamma.R');source('R/estimation_inference.R');source('R/threshold_splines.R')
 c<-stress_config();tasks<-stress_tasks();spec<-stress_spec();root<-paper_profile$result_root
 dir.create(root,recursive=TRUE,showWarnings=FALSE)
 packages<-c('glmnet','ranger','xgboost','SuperLearner','nloptr')
 stopifnot(all(vapply(packages,requireNamespace,logical(1),quietly=TRUE)))
 target_object<-readRDS('results/population_targets.rds');targets<-target_object$targets
-stopifnot(identical(target_object$config,c),nrow(targets)==16,
+stopifnot(identical(target_object$config,c),nrow(targets)==nrow(c$settings)*length(c$Lambdas)*length(c$classes),
  all(targets$refinement[targets$compatible]<5e-4),all(is.na(targets$lower[!targets$compatible])))
 signature<-list(config=c,manifest=manifest,targets_md5=unname(tools::md5sum('results/population_targets.rds')),
  R=as.character(getRversion()),packages=sapply(packages,function(p)as.character(packageVersion(p))))
 meta<-file.path(root,'signature.rds')
 if(stage=='preflight') {
  if(file.exists(meta))stopifnot(identical(readRDS(meta),signature)) else stress_atomic(signature,meta,FALSE)
- cat('PREFLIGHT PASSED: 2000 datasets, n=6000, 500 repetitions, 16000 attempted fits.\n',
+ cat('PREFLIGHT PASSED:',nrow(tasks),'datasets; n =',c$n,';',nrow(tasks)*nrow(spec),'attempted fits.\n',
  paste0('Incompatible setting-4 values: ',paste(paper_profile$incompatible_Lambda,collapse=', '),'; coverage is NA.\n'),
  'Frozen main-study learners, penalties, folds and seeds; one compact checkpoint per dataset.\n')
  quit(save='no')
@@ -24,7 +24,7 @@ if(stage=='preflight') {
 stopifnot(identical(readRDS(meta),signature))
 path_for<-function(id)file.path(root,sprintf('task_%04d.rds',id))
 if(stage%in%c('check_gate','collect')) {
- ids<-if(stage=='check_gate')c(1L,501L,1001L,1501L) else 1:2000
+ ids<-if(stage=='check_gate')intersect(c(1L,501L,1001L,1501L),tasks$id) else tasks$id
  rows<-list();missing<-integer()
  for(id in ids) {
   t<-tasks[id,];path<-path_for(id)
@@ -65,7 +65,7 @@ if(stage%in%c('check_gate','collect')) {
   }))
   stress_atomic(list(detail=d,summary=summaries,signature=signature),file.path(root,'summary.rds'))
   print(summaries,row.names=FALSE)
- } else cat('GATE PASSED: all 32 attempts saved; compatible fits successful; incompatible coverage NA.\n')
+ } else cat('GATE PASSED: all 8 attempts saved; compatible fits successful; incompatible coverage NA.\n')
  quit(save='no')
 }
 id<-as.integer(args[2]);stopifnot(length(id)==1L,!is.na(id),id%in%tasks$id)

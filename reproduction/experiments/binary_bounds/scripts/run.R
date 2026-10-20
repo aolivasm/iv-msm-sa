@@ -10,7 +10,7 @@ root<-'results/binary_x5_stress_v1';meta<-file.path(root,'signature.rds')
 if(file.exists(meta))stopifnot(identical(readRDS(meta),sig)) else {stopifnot(stage=='preflight');atomic(sig,meta)}
 if(stage=='preflight'){
  cat('PREFLIGHT: stress only, n6000, four settings x 500 reps = 2000 datasets.\n')
- cat('RKHS + growing-direct; Lambda 1.8,2,2.5,3; 16000 interval fits. Compact checkpoints.\n');quit(status=0)
+ cat('RKHS; Lambda 1.8,2,2.5,3; 8000 interval fits. Compact checkpoints.\n');quit(status=0)
 }
 if(stage%in%c('task','smoke')){
  id<-if(length(args)>1)as.integer(args[2]) else 1501L
@@ -41,7 +41,7 @@ for(id in ids){
  }
 }
 status<-do.call(rbind,status)
-if(stage=='check_gate'){stopifnot(all(status$success));cat('GATE PASSED: four n6000 datasets, eight learner runs, 32 interval fits.\n');quit(status=0)}
+if(stage=='check_gate'){stopifnot(all(status$success));cat('GATE PASSED: four n6000 datasets, four learner runs, 16 interval fits.\n');quit(status=0)}
 detail<-do.call(rbind,detail)
 summary<-do.call(rbind,lapply(split(detail,interaction(detail$setting,detail$method,detail$Lambda,drop=TRUE)),function(g){
  cbind(g[1,c('setting','method','Lambda')],attempted=500,successful=nrow(g),outward=mean(g$outward),

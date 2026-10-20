@@ -24,7 +24,7 @@ for (method in c('Tan','Dorn')) add(subset(bf,adjustment=='x' & Lambda!=1),'Bina
 # In the X-adjusted MSM, mix residual distributions using P(Z | T=t,X).
 local({
   old<-getwd();on.exit(setwd(old));setwd('experiments/continuous_bounds')
-  source('R/x5_simple_population_targets.R',local=globalenv())
+  source('R/design.R');source('R/nuisance_models.R');source('R/rkhs_gamma.R');source('R/estimation_inference.R');source('R/threshold_splines.R');source('R/population_targets.R',local=globalenv())
 })
 continuous_msm <- function(n, shift) {
   x <- x5p_rule(n,shift);xm<-as.matrix(x)

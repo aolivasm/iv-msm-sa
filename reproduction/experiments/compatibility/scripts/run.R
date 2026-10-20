@@ -88,7 +88,7 @@ audit <- list(expected_datasets=nrow(tasks),expected_learners=expected_learners,
   successful_learners=successes,failures=0L,all_tasks_complete=TRUE,
   paired_data_folds_primitives_verified=TRUE,source_manifest_verified=TRUE)
 result <- list(signature=signature,status=status,detail=detail,summary=summary,audit=audit,
-  note=paste('Pointwise maximum is primary. Both learners share each dataset/folds/primitives.',
+  note=paste('Pointwise maximum is primary. The main-text RKHS learner is used.',
     'Complete retained diagnostics are separate from this compact summary.',
     'Source tuning differs by outcome and is preserved from n6000.',
     'Only stress and null designs; no post-hoc test selection.',

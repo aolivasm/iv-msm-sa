@@ -27,7 +27,7 @@ sig<-list(config=config,manifest=m,implementation='official binary Tan and binar
  packages=sapply(c('RCALsa','grf'),function(p)as.character(packageVersion(p))),authors=authors$git_commit)
 root<-'results/binary_x5_comparators_v1';meta<-file.path(root,'signature.rds')
 if(file.exists(meta))stopifnot(identical(readRDS(meta),sig)) else {stopifnot(stage=='preflight');atomic(sig,meta)}
-spec<-expand.grid(method=c('tan','dorn'),adjustment=c('x','xz'),Lambda=config$Lambda,stringsAsFactors=FALSE)
+spec<-expand.grid(method=c('tan','dorn'),adjustment=config$adjustments,Lambda=config$Lambda,stringsAsFactors=FALSE)
 spec$key<-paste(spec$method,spec$adjustment,spec$Lambda,sep='_')
 dictionary<-function(d,cols){x<-as.matrix(d[cols]);sq<-as.matrix(d[paste0('X',1:5)])^2;p<-combn(ncol(x),2)
  f<-scale(cbind(x,sq,sapply(seq_len(ncol(p)),function(i)x[,p[1,i]]*x[,p[2,i]])));stopifnot(all(is.finite(f)));f}
@@ -36,7 +36,7 @@ check<-function(z,t){stopifnot(identical(z$signature,sig),identical(z$task,t),is
 }
 if(stage=='preflight'){
  stopifnot(nrow(tasks)==2000,!anyDuplicated(tasks$seed),all(table(tasks$setting)==500))
- cat('PREFLIGHT PASSED: binary n6000; 2000 datasets, 32000 interval fits; 8 workers after gate.\n');quit(status=0)
+ cat('PREFLIGHT PASSED: binary n6000; 2000 datasets, 16000 interval fits; 8 workers after gate.\n');quit(status=0)
 }
 if(stage%in%c('task','smoke')){
  id<-as.integer(args[2]);stopifnot(id%in%tasks$id);t<-tasks[id,,drop=FALSE]
@@ -46,10 +46,10 @@ if(stage%in%c('task','smoke')){
   if(!dir.create(lock,showWarnings=FALSE))stop('Task lock exists: ',lock)
   on.exit(unlink(lock,recursive=TRUE))
   z<-if(file.exists(p))readRDS(p) else list(signature=sig,task=t,records=list());check(z,t)
-  if(length(z$records)==16){cat('ALREADY COMPLETE',id,'\n');return()}
+  if(length(z$records)==nrow(spec)){cat('ALREADY COMPLETE',id,'\n');return()}
   d<-generate(t,if(stage=='smoke')600L else 6000L)
   failed<-function(endpoint,msg)data.frame(endpoint=endpoint,success=FALSE,error=msg,estimate=NA_real_,standard_error=NA_real_)
-  for(adj in c('x','xz')){
+  for(adj in config$adjustments){
    cols<-if(adj=='x')paste0('X',1:5) else c(paste0('X',1:5),'Z');design<-dictionary(d,cols);dcache<-NULL
    for(method in c('tan','dorn'))for(L in config$Lambda){
     key<-paste(method,adj,L,sep='_');if(key%in%names(z$records))next
@@ -86,6 +86,6 @@ for(id in ids){z<-readRDS(file.path(root,'runs',sprintf('task_%04d.rds',id)));ch
  for(v in z$records)rows[[length(rows)+1L]]<-cbind(z$task,n=6000,method=v$method,adjustment=v$adjustment,Lambda=v$Lambda,v$endpoints)}
 d<-do.call(rbind,rows)
 if(stage=='gate_check'){stopifnot(all(d$success));cat('GATE PASSED: four n6000 datasets, 64 intervals.\n');quit(status=0)}
-stopifnot(nrow(d)==64000,!anyDuplicated(d[c('id','method','adjustment','Lambda','endpoint')]))
+stopifnot(nrow(d)==nrow(tasks)*nrow(spec)*2L,!anyDuplicated(d[c('id','method','adjustment','Lambda','endpoint')]))
 atomic(list(signature=sig,endpoints=d,failures=d[!d$success,]),file.path(root,'summary.rds'))
 cat(sum(d$success),'of',nrow(d),'endpoints successful; failures retained. No coverage until MSM targets validated.\n')

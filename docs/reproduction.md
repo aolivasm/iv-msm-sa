@@ -40,7 +40,7 @@ configuration choices, not separate copies of the estimator.
 | Configuration | Main-text result | Tasks |
 |---|---|---:|
 | `continuous_L2_L3` | IV-MSM, n=6,000, sensitivity values 2 and 3 | 2,000 |
-| `continuous_L18_L25` | IV-MSM, n=6,000, values 1.8 and 2.5 | 2,000 |
+| `continuous_L18_L25` | IV-MSM, n=6,000, settings 1–3, values 1.8 and 2.5 | 1,500 |
 | `binary_bounds` | IV-MSM, n=6,000, all four values | 2,000 |
 | `comparators_L2_L3` | Tan and Dorn, n=6,000, values 2 and 3 | 2,000 |
 | `comparators_L18_L25` | Tan and Dorn, values 1.8 and 2.5 | 2,000 |
@@ -62,6 +62,8 @@ Rscript scripts/compute_paper_targets.R
 
 The `continuous_bounds` and `continuous_comparators` analysis names each run
 both sensitivity configurations, preserving the paper's original fit ordering.
+For `continuous_bounds`, task IDs 1,501–2,000 apply only to the 2-and-3
+configuration: setting 4 at 1.8 and 2.5 is not reported for IV-MSM.
 Select a configuration name to run just that batch. In particular, the same
 compatibility engine handles all three sample-size configurations.
 
@@ -79,9 +81,9 @@ Rscript scripts/paper.R experiment continuous_bounds collect
 
 These commands can be expensive. They do not submit jobs automatically.
 Use fresh checkpoints; do not import historical cluster signatures. Original
-drivers retain the learner/class and X versus (X,Z) comparisons reported in
-Appendix D; the main-results collector selects RKHS, spline thresholds, and
-X-adjusted competitors. Seeds, original outcome-specific tuning, and estimating
+drivers run only RKHS, the fixed spline threshold class, and X-adjusted
+competitors. Supplementary learner/class comparisons are not run. Seeds,
+original outcome-specific tuning, and estimating
 equations are preserved. Do not replace them with newer package defaults and
 call the result an exact reproduction.
 

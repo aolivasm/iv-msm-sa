@@ -83,7 +83,7 @@ for(id in ids){
 }
 ep<-do.call(rbind,rows);rownames(ep)<-NULL
 if(stage=='gate_check'){cat('GATE PASSED: four datasets; all 32 interval fits / 64 endpoints successful.\n');quit(status=0)}
-stopifnot(nrow(ep)==32000,!anyDuplicated(ep[c('id','method','adjustment','Lambda','endpoint')]))
+stopifnot(nrow(ep)==nrow(tasks)*nrow(spec)*2L,!anyDuplicated(ep[c('id','method','adjustment','Lambda','endpoint')]))
 atomic(list(signature=signature,endpoints=ep,failures=ep[!ep$success,],diagnostics=diagnostics),file.path(root,'summary.rds'))
 cat(sum(ep$success),'of',nrow(ep),'endpoints successful; failures retained.\n')
 cat('Stress-specific conventional MSM targets must be validated before coverage; never reuse baseline or IV-MSM targets.\n')
