@@ -107,7 +107,7 @@ binary_x5_msm_population <- function(project_root = getwd(), comparator_summary 
   source_paths <- c(
     iv_design = "experiments/binary_bounds/scripts/common.R",
     comparator_design = "experiments/binary_comparators/R/design.R",
-    iv_population = "experiments/binary_bounds/targets/population.rds"
+    iv_population = "results/work/binary_bounds/targets/population.rds"
   )
   absolute_paths <- file.path(project_root, source_paths)
   if (!all(file.exists(absolute_paths)))

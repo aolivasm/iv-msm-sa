@@ -112,3 +112,16 @@ collection and plotting workflows. The newly connected workflows were checked
 without rerunning fitted experiments; this is not a claim of an independently
 reproduced full Monte Carlo study. Authorized OHIE inputs and separately licensed
 comparator software must be obtained by the user. See [reproduction](reproduction.md).
+## Shared experiment configuration (October 20, 2026)
+
+The nine paper configurations now use five shared source engines. All nine
+configuration objects were compared with the previous publication drivers and
+matched exactly. Statistical dependencies and compatibility adapters matched
+byte-for-byte in 279 comparisons. Sample sizes, sensitivity grids, seeds,
+learner/class choices, and outcome-specific tuning were retained.
+
+Verification covered configuration dispatch and task contracts, repeated
+preparation, changed-source rejection, compatibility checkpoint/resume and
+failure handling, main-results collection fixtures, and existing smoke tests.
+These are software checks, not new Monte Carlo studies. No simulations or
+application fits were run for this consolidation.

@@ -51,5 +51,5 @@ for(j in 1:4)for(L in c$Lambdas)for(cl in c$classes) {
  cat('Validated population target:',j,L,cl,'range',gap,'\n');flush.console()
 }
 stress_atomic(list(targets=do.call(rbind,rows),details=details,config=c,
- witness=interior,witness_slack=slack(interior,1.1,.15,2),
+ witness=interior,witness_slack=if(length(paper_profile$incompatible_Lambda)==1L)slack(interior,1.1,.15,2) else sapply(c$Lambdas,function(L)slack(interior,1.1,.15,L)),
  note='Compatible cells passed numerical support and integration checks, not a formal global certificate. No targets for incompatible cell.'),out,FALSE)

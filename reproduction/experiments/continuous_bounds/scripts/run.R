@@ -4,7 +4,7 @@ args<-commandArgs(TRUE);stage<-if(length(args))args[1] else 'preflight'
 stopifnot(stage%in%c('preflight','task','check_gate','collect'))
 manifest<-readRDS('manifest.rds');stopifnot(identical(manifest,tools::md5sum(names(manifest))))
 source('R/x5_growing_gamma.R');source('R/x5_simple_thresholds.R');source('R/x5_adaptive_gamma_provider.R')
-c<-stress_config();tasks<-stress_tasks();spec<-stress_spec();root<-'results/x5_stress_v1'
+c<-stress_config();tasks<-stress_tasks();spec<-stress_spec();root<-paper_profile$result_root
 dir.create(root,recursive=TRUE,showWarnings=FALSE)
 packages<-c('glmnet','ranger','xgboost','SuperLearner','nloptr')
 stopifnot(all(vapply(packages,requireNamespace,logical(1),quietly=TRUE)))
@@ -17,7 +17,7 @@ meta<-file.path(root,'signature.rds')
 if(stage=='preflight') {
  if(file.exists(meta))stopifnot(identical(readRDS(meta),signature)) else stress_atomic(signature,meta,FALSE)
  cat('PREFLIGHT PASSED: 2000 datasets, n=6000, 500 repetitions, 16000 attempted fits.\n',
- 'Setting 4 / Lambda 2 is deliberately incompatible; coverage is NA.\n',
+ paste0('Incompatible setting-4 values: ',paste(paper_profile$incompatible_Lambda,collapse=', '),'; coverage is NA.\n'),
  'Frozen main-study learners, penalties, folds and seeds; one compact checkpoint per dataset.\n')
  quit(save='no')
 }

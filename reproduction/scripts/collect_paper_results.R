@@ -6,7 +6,7 @@ if(dir.exists(out))stop('Choose a new output directory; refusing overwrite: ',ou
 targets<-readRDS('results/population_targets.rds')
 palette<-c('IV-MSM'='#0072B2',Tan='#D55E00',Dorn='#009E73')
 read_experiment<-function(name,path) {
- f<-file.path('experiments',name,path)
+ f<-file.path('results/work',name,path)
  if(!file.exists(f))stop('Run and collect this analysis first: ',f)
  readRDS(f)
 }
@@ -19,8 +19,8 @@ add<-function(d,outcome,display) {
  rows[[length(rows)+1L]]<<-d[,c('outcome','setting','Lambda','display','replication',
  'n','lower','upper','target_lower','target_upper','outward','confidence_width')]
 }
-for(name in c('continuous_bounds','continuous_bounds_additional_values')) {
- result<-if(name=='continuous_bounds')'x5_stress_v1' else 'x5_stress_extra_lambda_v1'
+for(name in c('continuous_L2_L3','continuous_L18_L25')) {
+ result<-if(name=='continuous_L2_L3')'x5_stress_v1' else 'x5_stress_extra_lambda_v1'
  d<-read_experiment(name,paste0('results/',result,'/summary.rds'))$detail
  d<-subset(d,method=='rkhs_tuned'&class=='fixed_spline5')
  stopifnot(all(d$success))
@@ -32,9 +32,9 @@ z<-read_experiment('binary_bounds','results/binary_x5_stress_v1/summary.rds')
 stopifnot(all(z$status$success));d<-subset(z$detail,method=='rkhs')
 d$lower<-d$estimate_lower;d$upper<-d$estimate_upper
 add(d,'Binary','IV-MSM')
-for(name in c('continuous_comparators','continuous_comparators_additional_values','binary_comparators')) {
- result<-switch(name,continuous_comparators='x5_stress_comparators_v1',
- continuous_comparators_additional_values='x5_stress_extra_comparators_v1',
+for(name in c('comparators_L2_L3','comparators_L18_L25','binary_comparators')) {
+ result<-switch(name,comparators_L2_L3='x5_stress_comparators_v1',
+ comparators_L18_L25='x5_stress_extra_comparators_v1',
  binary_comparators='binary_x5_comparators_v1')
  z<-read_experiment(name,paste0('results/',result,'/summary.rds'))
  d<-subset(z$endpoints,adjustment=='x');stopifnot(all(d$success))
@@ -63,12 +63,12 @@ main<-do.call(rbind,lapply(groups,function(d) {
 }))
 stopifnot(nrow(main)==93L)
 compat<-do.call(rbind,lapply(c(6000,12000),function(n) {
- z<-read_experiment(paste0('compatibility_n',n),paste0('results/x5_compatibility_n',n,'_v1/summary.rds'))
+ z<-read_experiment(paste0('compatibility_',n),paste0('results/x5_compatibility_n',n,'_v1/summary.rds'))
  stopifnot(all(z$status$success));d<-subset(z$summary,method=='rkhs')
  d$outcome<-ifelse(d$outcome=='continuous','Continuous','Binary');d
 }))
 stopifnot(nrow(compat)==40L,all(compat$successful==500L))
-n24<-read_experiment('binary_compatibility_n24000','results/binary_s4_compatibility_n24000_v1/summary.rds')$summary
+n24<-read_experiment('compatibility_binary_24000','results/binary_s4_compatibility_24000_v1/summary.rds')$summary
 stopifnot(n24$successful==500L)
 dir.create(out,recursive=TRUE)
 saveRDS(list(main=main,endpoint_estimates=ep,palette=palette),file.path(out,'bounds.rds'))

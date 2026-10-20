@@ -30,3 +30,6 @@ jobs:
       - name: Code-only population target fixture
         working-directory: reproduction
         run: Rscript --vanilla tests/test_code_only_targets.R
+      - name: Shared experiment configuration
+        working-directory: reproduction
+        run: Rscript --vanilla tests/test_experiment_configuration.R

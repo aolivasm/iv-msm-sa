@@ -1,33 +1,38 @@
 #!/usr/bin/env Rscript
-# Explicit dispatcher. Default is a plan; no automatic study or scheduler launch.
-args<-commandArgs(TRUE)
-analyses<-c('continuous_bounds','continuous_bounds_additional_values','binary_bounds',
- 'continuous_comparators','continuous_comparators_additional_values','binary_comparators',
- 'compatibility_n6000','compatibility_n12000','binary_compatibility_n24000')
-if(!length(args)||args[1]=='plan') {
- print(data.frame(analysis=analyses,tasks=c(rep(2000,6),5000,5000,500)),row.names=FALSE)
- cat('\nRun from the reproduction directory:\n',
- 'Rscript scripts/paper.R experiment ANALYSIS preflight\n',
- 'Rscript scripts/paper.R experiment ANALYSIS task ID\n',
- 'Rscript scripts/paper.R experiment ANALYSIS collect\n',
- '\nFigures from existing aggregate results (no fitting):\n',
- 'Rscript scripts/render_paper_results.R\n',sep='')
- quit(status=0)
-}
-if(args[1]!='experiment'||length(args)<3||!args[2]%in%analyses||
- !args[3]%in%c('targets','preflight','task','collect'))stop('Use: paper.R plan, or experiment ANALYSIS targets|preflight|task ID|collect')
-if(args[3]=='task') {
- if(length(args)!=4L||!grepl('^[1-9][0-9]*$',args[4]))stop('Supply one positive task ID.')
-} else if(length(args)!=3L)stop('Unexpected arguments.')
+# Default is a plan; no automatic study or scheduler launch.
 source('scripts/prepare_experiments.R')
-prepare_experiments()
-setwd(file.path('experiments',args[2]))
-if(args[3]=='targets') {
- script <- if(args[2]=='binary_bounds') 'scripts/population.R' else 'scripts/targets.R'
- if(!file.exists(script))stop('This analysis does not require separate population targets.')
- dir.create('results',showWarnings=FALSE);dir.create('targets',showWarnings=FALSE)
- status<-system2(file.path(R.home('bin'),'Rscript'),script)
- quit(status=status)
+args<-commandArgs(TRUE);settings<-paper_settings();profiles<-settings$profiles
+if(!length(args)||args[1]=='plan') {
+  print(do.call(rbind,lapply(names(profiles),function(key){
+    p<-profiles[[key]];c<-p$config
+    data.frame(configuration=key,analysis=p$analysis,n=c$n,
+      Lambda=paste(if(is.null(c$Lambda))c$Lambdas else c$Lambda,collapse=','),
+      tasks=p$tasks)
+  })),row.names=FALSE)
+  cat('\nSettings: configurations/main_experiments.R. Run from reproduction/:\n',
+      'Rscript scripts/paper.R experiment ANALYSIS_OR_CONFIGURATION preflight\n',
+      'Rscript scripts/paper.R experiment ANALYSIS_OR_CONFIGURATION task ID\n',
+      'Rscript scripts/paper.R experiment ANALYSIS_OR_CONFIGURATION collect\n',sep='')
+  quit(status=0)
 }
-status<-system2(file.path(R.home('bin'),'Rscript'),c('scripts/run.R',shQuote(args[-c(1,2)])))
-quit(status=status)
+stopifnot(length(args)>=3,args[1]=='experiment',
+          args[3]%in%c('targets','preflight','task','collect'))
+keys<-if(args[2]%in%names(profiles))args[2] else
+  names(profiles)[vapply(profiles,function(p)p$analysis==args[2],logical(1))]
+if(!length(keys))stop('Unknown analysis/configuration. Run paper.R plan.')
+if(args[3]=='task') {
+  if(length(args)!=4L||!grepl('^[1-9][0-9]*$',args[4]))stop('Supply one positive task ID.')
+  if(any(as.integer(args[4])>vapply(profiles[keys],`[[`,integer(1),'tasks')))
+    stop('Task ID exceeds a selected configuration. Select a specific configuration.')
+} else if(length(args)!=3L)stop('Unexpected arguments.')
+root<-normalizePath('.');prepare_experiments(root,keys)
+for(key in keys) {
+  setwd(paper_workspace(key,root));cat('Configuration:',key,'\n')
+  if(args[3]=='targets') {
+    script<-if(profiles[[key]]$engine=='binary_bounds')'scripts/population.R' else 'scripts/targets.R'
+    if(!file.exists(script))stop('No separate population targets for ',key)
+    dir.create('results',showWarnings=FALSE);dir.create('targets',showWarnings=FALSE)
+    status<-system2(file.path(R.home('bin'),'Rscript'),script)
+  } else status<-system2(file.path(R.home('bin'),'Rscript'),c('scripts/run.R',shQuote(args[-c(1,2)])))
+  if(status!=0L)quit(status=status)
+}

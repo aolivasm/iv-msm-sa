@@ -1,6 +1,5 @@
-config <- list(n = 6000L, reps = 500L, Lambda = c(1.8, 2, 2.5, 3), methods = c("rkhs", "growing_direct"), settings = data.frame(a = c(0.55, 
-    1.1, 1.65, 1.1), b = c(0.075, 0.075, 0.075, 0.15)), K = 5L, epsilon = 0, primitives = c("glm_main", "glm_interactions", 
-    "glmnet_interactions", "ranger", "xgboost"))
+source('paper_config.R')
+config <- paper_profile$config
 tasks <- data.frame(id = 1:2000, setting = rep(1:4, each = 500), replication = rep(1:500, 4))
 generate <- function(t, n = config$n) {
     set.seed(t$seed)

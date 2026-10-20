@@ -1,17 +1,16 @@
 # Compact study bookkeeping. Statistical routines are frozen from the main study.
-stress_config <- function() list(n=6000L,repetitions=500L,K=5L,
- settings=data.frame(a=c(.55,1.1,1.65,1.1),b=c(.075,.075,.075,.15)),
- Lambdas=c(2,3),methods=c('rkhs_tuned','growing_direct'),
- classes=c('fixed_spline5','fixed_rbf60'),seed_base=820000L,stress=TRUE)
+source('paper_config.R')
+stress_config <- function() paper_profile$config
 stress_tasks <- function() {
- c<-stress_config();data.frame(setting=rep(1:4,each=500),n=6000L,
- replication=rep(1:500,4),id=1:2000,seed=820000L+rep(1:500,4))
+ c<-stress_config();r<-c$repetitions;s<-nrow(c$settings)
+ data.frame(setting=rep(seq_len(s),each=r),n=c$n,
+ replication=rep(seq_len(r),s),id=seq_len(r*s),seed=c$seed_base+rep(seq_len(r),s))
 }
 stress_spec <- function() {
  c<-stress_config();s<-expand.grid(method=c$methods,Lambda=c$Lambdas,class=c$classes,stringsAsFactors=FALSE)
  s$key<-with(s,paste0(method,'_',class,'_L',Lambda));s
 }
-stress_compatible <- function(setting,Lambda) !(setting==4L && Lambda==2)
+stress_compatible <- function(setting,Lambda) !(setting==4L && Lambda%in%paper_profile$incompatible_Lambda)
 stress_atomic <- function(object,path,overwrite=TRUE) {
  if(!overwrite && file.exists(path))stop('Refusing overwrite: ',path)
  dir.create(dirname(path),recursive=TRUE,showWarnings=FALSE)

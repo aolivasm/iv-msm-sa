@@ -1,6 +1,6 @@
 # Small deterministic integration fixture. No estimators or random datasets.
 old<-getwd()
-setwd('experiments/binary_bounds');source('scripts/common.R');setwd(old)
+config <- dget('configurations/main_experiments.R')$profiles$binary_bounds$config
 b<-list(config=config)
 expressions<-as.list(parse('scripts/compute_paper_targets.R'))
 for(expr in expressions) {

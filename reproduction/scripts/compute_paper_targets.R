@@ -8,11 +8,11 @@ add <- function(d, outcome, display) {
   rows[[length(rows)+1L]] <<- data.frame(outcome=outcome, setting=d$setting,
     Lambda=d$Lambda, display=display, target_lower=d$lower, target_upper=d$upper)
 }
-for (name in c('continuous_bounds','continuous_bounds_additional_values')) {
-  d <- readRDS(file.path('experiments',name,'results/population_targets.rds'))$targets
+for (name in c('continuous_L2_L3','continuous_L18_L25')) {
+  d <- readRDS(file.path('results/work',name,'results/population_targets.rds'))$targets
   add(subset(d,class=='fixed_spline5'),'Continuous','IV-MSM')
 }
-b <- readRDS('experiments/binary_bounds/targets/population.rds')
+b <- readRDS('results/work/binary_bounds/targets/population.rds')
 add(b$targets,'Binary','IV-MSM')
 source('scripts/analysis_binary_x5_comparator_population_v1.R')
 bc <- binary_x5_msm_integrate(11L,b$config)$targets

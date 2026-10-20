@@ -4,6 +4,10 @@ source('scripts/common.R')
 manifest<-readRDS('manifest.rds')
 stopifnot(identical(unname(manifest),unname(tools::md5sum(names(manifest)))))
 source('R/dvds_official_authors.R');stopifnot(requireNamespace('RCALsa',quietly=TRUE))
+if(paper_profile$single_thread_nuisance){
+ source('scripts/grf_threads.R')
+ dvds_official_fit_nuisances<-single_thread_dvds_nuisances(dvds_official_fit_nuisances)
+}
 authors<-dvds_official_load()
 for(nm in c('quantile_forest','regression_forest','probability_forest'))
  authors$environment[[nm]]<-local({f<-getExportedValue('grf',nm);function(X,...)f(as.matrix(X),...,num.threads=1)})
@@ -18,7 +22,7 @@ signature<-list(config=config,manifest=manifest,R=as.character(getRversion()),pa
  dictionary='Tan: standardized main effects, X squares, all pairwise interactions; no Z square')
 args<-commandArgs(TRUE);stage<-if(length(args))args[1] else 'preflight'
 stopifnot(stage%in%c('preflight','task','gate_check','collect'))
-root<-'results/x5_stress_comparators_v1';dir.create(root,recursive=TRUE,showWarnings=FALSE)
+root<-paper_profile$result_root;dir.create(root,recursive=TRUE,showWarnings=FALSE)
 meta<-file.path(root,'signature.rds')
 if(file.exists(meta))stopifnot(identical(readRDS(meta),signature)) else {
  stopifnot(stage=='preflight');atomic(signature,meta)
@@ -55,12 +59,13 @@ fit_one<-function(d,t,s,signature){
  st<-config$settings[t$setting,]
  list(signature=signature,task=t,a=st$a,b=st$b,method=method,adjustment=adj,Lambda=L,
   endpoints=e,success=all(e$success),warnings=unique(warnings),seconds=unname(proc.time()[3]-start),
-  iv_msm_compatible=!(t$setting==4L&&L==2))
+  iv_msm_compatible=!(t$setting==4L&&L%in%paper_profile$incompatible_Lambda))
 }
 if(stage=='preflight'){
  for(id in gate_ids){t<-tasks[id,];st<-config$settings[t$setting,];d<-x5g_generate(t$n,st$a,st$b,t$seed,TRUE)
-  stopifnot(nrow(d)==6000,all(is.finite(dictionary(d,paste0('X',1:5)))),all(is.finite(dictionary(d,c(paste0('X',1:5),'Z')))))}
- cat('PREFLIGHT PASSED: 2000 datasets; n6000; four settings; 500 repetitions; Lambda 2,3; 16000 interval fits / 32000 endpoints.\n')
+  stopifnot(nrow(d)==config$n,all(is.finite(dictionary(d,paste0('X',1:5)))),all(is.finite(dictionary(d,c(paste0('X',1:5),'Z')))))}
+ cat('PREFLIGHT PASSED:',nrow(tasks),'datasets; n =',config$n,'; Lambda =',
+     paste(config$Lambdas,collapse=','),';',nrow(tasks)*nrow(spec),'interval fits.\n')
  cat('Exact frozen LPC stress generator; baseline Tan/Dorn tuning and software; compact checkpoints.\n');quit(status=0)
 }
 if(stage=='task'){run_task(as.integer(args[2]),root,signature,fit_one);quit(status=0)}

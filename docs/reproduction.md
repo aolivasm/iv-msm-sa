@@ -31,17 +31,23 @@ Install the [fitting dependencies](installation.md) and
 Rscript scripts/paper.R plan
 ```
 
-| Analysis | Main-text result | Tasks |
+All experiment settings are in
+[`main_experiments.R`](../reproduction/configurations/main_experiments.R).
+Five shared engines implement continuous bounds, binary bounds, their
+comparators, and compatibility testing. Sample sizes and sensitivity grids are
+configuration choices, not separate copies of the estimator.
+
+| Configuration | Main-text result | Tasks |
 |---|---|---:|
-| `continuous_bounds` | IV-MSM, n=6,000, sensitivity values 2 and 3 | 2,000 |
-| `continuous_bounds_additional_values` | IV-MSM, n=6,000, values 1.8 and 2.5 | 2,000 |
+| `continuous_L2_L3` | IV-MSM, n=6,000, sensitivity values 2 and 3 | 2,000 |
+| `continuous_L18_L25` | IV-MSM, n=6,000, values 1.8 and 2.5 | 2,000 |
 | `binary_bounds` | IV-MSM, n=6,000, all four values | 2,000 |
-| `continuous_comparators` | Tan and Dorn, n=6,000, values 2 and 3 | 2,000 |
-| `continuous_comparators_additional_values` | Tan and Dorn, values 1.8 and 2.5 | 2,000 |
+| `comparators_L2_L3` | Tan and Dorn, n=6,000, values 2 and 3 | 2,000 |
+| `comparators_L18_L25` | Tan and Dorn, values 1.8 and 2.5 | 2,000 |
 | `binary_comparators` | Tan and Dorn, n=6,000, all four values | 2,000 |
-| `compatibility_n6000` | Both outcomes; values 1 and 1.1 | 5,000 |
-| `compatibility_n12000` | Both outcomes; values 1 and 1.1 | 5,000 |
-| `binary_compatibility_n24000` | Binary setting 4; value 1 | 500 |
+| `compatibility_6000` | Both outcomes; values 1 and 1.1 | 5,000 |
+| `compatibility_12000` | Both outcomes; values 1 and 1.1 | 5,000 |
+| `compatibility_binary_24000` | Binary setting 4; value 1 | 500 |
 
 Each setting uses 500 replications. Compatibility tasks include the paper's
 null controls. A task is one dataset, not one endpoint or sensitivity value.
@@ -50,13 +56,18 @@ integration, potentially expensive, but no simulated datasets):
 
 ```sh
 Rscript scripts/paper.R experiment continuous_bounds targets
-Rscript scripts/paper.R experiment continuous_bounds_additional_values targets
 Rscript scripts/paper.R experiment binary_bounds targets
 Rscript scripts/compute_paper_targets.R
 ```
 
-Configuration RDS files and integrity manifests are generated locally from readable
-settings by the dispatcher; they are not distributed. For an analysis, explicitly
+The `continuous_bounds` and `continuous_comparators` analysis names each run
+both sensitivity configurations, preserving the paper's original fit ordering.
+Select a configuration name to run just that batch. In particular, the same
+compatibility engine handles all three sample-size configurations.
+
+Workspaces, configuration RDS files, and integrity manifests are generated locally
+under `results/work/CONFIGURATION/`; they are not distributed. Source or
+configuration changes cannot silently reuse existing checkpoints. For an analysis, explicitly
 run preflight, individual task IDs, then collection:
 
 ```sh
@@ -74,7 +85,7 @@ X-adjusted competitors. Seeds, original outcome-specific tuning, and estimating
 equations are preserved. Do not replace them with newer package defaults and
 call the result an exact reproduction.
 
-After collecting all nine analyses:
+After collecting all nine configurations:
 
 ```sh
 Rscript scripts/collect_paper_results.R results/paper_reproduction
@@ -127,11 +138,12 @@ and person-level scores private. Never upload a working results directory.
 ```sh
 Rscript scripts/public/run_smoke_tests.R
 Rscript tests/test_paper_collection.R
+Rscript tests/test_experiment_configuration.R
 Rscript scripts/check_comparator_dependencies.R
 ```
 
 Compatibility bookkeeping tests can be run with `Rscript scripts/tests.R` from
-either compatibility experiment directory, after running
+`results/work/compatibility_12000/`, after running
 `Rscript scripts/prepare_experiments.R` from `reproduction/`. Estimator calls in those tests are
 mocked; small generator-parity and calibration fixtures are not Monte Carlo
 studies. Package tests and plotting saved aggregates do not establish statistical

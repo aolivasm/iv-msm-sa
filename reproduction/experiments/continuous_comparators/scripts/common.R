@@ -5,9 +5,12 @@ ast<-parse('R/x5_growing_gamma_frozen.R')
 definition<-Filter(function(v)is.call(v)&&identical(v[[1]],as.name('<-'))&&
  identical(v[[2]],as.name('x5g_generate')),as.list(ast))
 stopifnot(length(definition)==1L);eval(definition[[1]])
-config<-list(n=6000L,repetitions=500L,settings=data.frame(a=c(.55,1.1,1.65,1.1),b=c(.075,.075,.075,.15)),
- Lambdas=c(2,3),methods=c('tan','dorn'),adjustments=c('x','xz'),seed_base=820000L,stress=TRUE)
-tasks<-data.frame(setting=rep(1:4,each=500),n=6000L,replication=rep(1:500,4),id=1:2000,seed=820000L+rep(1:500,4))
+source('paper_config.R')
+config<-paper_profile$config
+tasks<-data.frame(setting=rep(seq_len(nrow(config$settings)),each=config$repetitions),
+ n=config$n,replication=rep(seq_len(config$repetitions),nrow(config$settings)),
+ id=seq_len(config$repetitions*nrow(config$settings)),
+ seed=config$seed_base+rep(seq_len(config$repetitions),nrow(config$settings)))
 spec<-expand.grid(Lambda=config$Lambdas,method=config$methods,adjustment=config$adjustments,stringsAsFactors=FALSE)
 spec$key<-with(spec,paste(method,adjustment,Lambda,sep='_'))
 gate_ids<-c(1L,501L,1001L,1501L)
@@ -28,7 +31,7 @@ atomic<-function(object,path){
 check_record<-function(z,t,s,signature){
  stopifnot(identical(z$task,t),identical(z$signature,signature),
   identical(z$method,s$method),identical(z$adjustment,s$adjustment),identical(z$Lambda,s$Lambda),
-  identical(z$iv_msm_compatible,!(t$setting==4L&&s$Lambda==2)))
+  identical(z$iv_msm_compatible,!(t$setting==4L&&s$Lambda%in%paper_profile$incompatible_Lambda)))
  e<-z$endpoints
  stopifnot(nrow(e)==2,setequal(e$endpoint,c('ate_lower','ate_upper')),
   is.logical(e$success),!anyNA(e$success),identical(z$success,all(e$success)),

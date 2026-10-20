@@ -67,8 +67,9 @@ fitting dependencies.
 
 The [main-text reproduction guide](docs/reproduction.md) describes the continuous-
 and binary-outcome numerical experiments and the Oregon Health Insurance Experiment
-application. Experiment settings and computational instructions are kept
-outside this README. Application data must be obtained separately following
+application. All numerical-experiment settings are in
+[`main_experiments.R`](reproduction/configurations/main_experiments.R);
+computational instructions are in the guide. Application data must be obtained separately following
 the [provider access instructions](reproduction/data/README.md).
 
 Results and fitted objects are not distributed. The reproduction guide explains
