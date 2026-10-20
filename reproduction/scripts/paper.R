@@ -6,7 +6,7 @@ analyses<-c('continuous_bounds','continuous_bounds_additional_values','binary_bo
  'compatibility_n6000','compatibility_n12000','binary_compatibility_n24000')
 if(!length(args)||args[1]=='plan') {
  print(data.frame(analysis=analyses,tasks=c(rep(2000,6),5000,5000,500)),row.names=FALSE)
- cat('\nRun from the repository root:\n',
+ cat('\nRun from the reproduction directory:\n',
  'Rscript scripts/paper.R experiment ANALYSIS preflight\n',
  'Rscript scripts/paper.R experiment ANALYSIS task ID\n',
  'Rscript scripts/paper.R experiment ANALYSIS collect\n',

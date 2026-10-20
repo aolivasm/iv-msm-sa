@@ -10,7 +10,8 @@ are distributed by Harvard Dataverse under custom access terms:
 
 <https://doi.org/10.7910/DVN/SJG1ED>
 
-After accepting those terms, extract the downloaded archive as
+First change into `reproduction/` from the repository root. After accepting
+those terms, extract the downloaded archive as
 `data/OHIE_Public_Use_Files/` and run:
 
 ```sh

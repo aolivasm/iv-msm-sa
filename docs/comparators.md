@@ -34,7 +34,7 @@ git -C external/DVDS checkout 26cbbf6e90dcd0648c837c0d58568375291dd522
 export IVMSM_DVDS_OFFICIAL_SOURCE="$(pwd)/external/DVDS"
 ```
 
-Run these commands from the repository root. The absolute environment-variable
+Run these commands from `reproduction/`. The absolute environment-variable
 path allows experiment scripts to change working directories safely. The adapter
 checks the commit before fitting. Keep the Git metadata in this external checkout.
 No external source is redistributed inside the release.
@@ -47,4 +47,4 @@ Rscript scripts/check_comparator_dependencies.R
 
 Historical runs used R 4.4.3 and RCALsa 1.0. The runner records installed package
 versions in each run signature. Different dependency versions may change random
-fits; the supplied aggregate results preserve the reported numerical values.
+fits; no saved results are supplied.

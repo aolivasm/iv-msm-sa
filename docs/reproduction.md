@@ -1,6 +1,8 @@
 # Reproducing the main results
 
-Run commands from the repository root. Results, fitted objects, and RDS files
+From the repository root, first run `cd reproduction` in your terminal.
+All commands and output paths below are relative to that directory.
+Results, fitted objects, and RDS files
 are not distributed. Run the analyses before collecting results and drawing
 figures. Neither package installation nor the default plan starts simulations.
 
@@ -88,7 +90,7 @@ truths or formal support-wide compatibility certificates.
 
 ## 3. Oregon Health Insurance Experiment
 
-Obtain the [authorized input data](../data/README.md). Only the administrative
+Obtain the [authorized input data](../reproduction/data/README.md). Only the administrative
 emergency-department application is included. Run:
 
 ```sh
@@ -130,7 +132,7 @@ Rscript scripts/check_comparator_dependencies.R
 
 Compatibility bookkeeping tests can be run with `Rscript scripts/tests.R` from
 either compatibility experiment directory, after running
-`Rscript scripts/prepare_experiments.R` from the repository root. Estimator calls in those tests are
+`Rscript scripts/prepare_experiments.R` from `reproduction/`. Estimator calls in those tests are
 mocked; small generator-parity and calibration fixtures are not Monte Carlo
 studies. Package tests and plotting saved aggregates do not establish statistical
 assumptions or replace a complete rerun. Different software versions can change

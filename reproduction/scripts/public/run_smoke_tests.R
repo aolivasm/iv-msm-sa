@@ -2,7 +2,7 @@
 if (length(commandArgs(trailingOnly = TRUE))) stop('This script takes no arguments.')
 files <- c('tests/check_binary_population_identities.R', 'tests/test_binary_continuum_band.R',
            'tests/test_binary_grid_band.R')
-if (!all(file.exists(files))) stop('Run from the repository root; smoke-test files are missing.')
+if (!all(file.exists(files))) stop('Run from the reproduction directory; smoke-test files are missing.')
 rscript <- file.path(R.home('bin'), 'Rscript')
 for (file in files) {
   cat('\nRunning:', file, '\n')

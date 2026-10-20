@@ -100,7 +100,7 @@ used these versions. Frozen runs record their own runtime signatures.
 
 ## Before uploading
 
-Run `python3 scripts/public/audit_release.py` on the clean, unmodified release
+From the repository root, run `python3 reproduction/scripts/public/audit_release.py` on the clean, unmodified release
 folder to verify `SHA256SUMS`, unexpected files, and selected credential patterns.
 The release deliberately has no Git history. Publish this curated source tree,
 not the development repository's historical branches, tags, or output files.

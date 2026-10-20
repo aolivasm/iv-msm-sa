@@ -69,10 +69,20 @@ The [main-text reproduction guide](docs/reproduction.md) describes the continuou
 and binary-outcome numerical experiments and the Oregon Health Insurance Experiment
 application. Experiment settings and computational instructions are kept
 outside this README. Application data must be obtained separately following
-the [provider access instructions](data/README.md).
+the [provider access instructions](reproduction/data/README.md).
 
 Results and fitted objects are not distributed. The reproduction guide explains
 how to run the analyses, collect their outputs, and generate the figures locally.
+
+The repository separates the installable package from paper-specific analyses:
+
+```text
+packages/ivmsm/    Estimators, documentation, and examples for package users
+reproduction/     Scripts and experiment drivers for reproducing the paper
+```
+
+Use `library(ivmsm)` for your own analyses. Run paper-reproduction commands from
+inside `reproduction/`, as explained in the guide.
 
 Code for ordered outcomes, finite discrete instruments, and binary-outcome
 confidence bands is described in the [extension guide](docs/extensions_api.md).

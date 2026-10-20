@@ -10,11 +10,13 @@
 *.Rcheck/
 *.tar.gz
 *.log
-data/*
-!data/README.md
+reproduction/data/*
+!reproduction/data/README.md
 /results/
 /output/
 **/logs/
 **/results/*
 /external/
+/reproduction/external/
+/reproduction/output/
 **/*.lock/

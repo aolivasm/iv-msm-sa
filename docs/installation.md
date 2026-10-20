@@ -1,7 +1,7 @@
 # Installation and dependencies
 
 Use R 4.4 or later. The **repository root** is the downloaded folder containing
-`README.md`, `packages/`, and `scripts/`. In R or RStudio, set this folder as
+`README.md`, `packages/`, and `reproduction/`. In R or RStudio, set this folder as
 your working directory, then run:
 
 ```r
@@ -26,6 +26,9 @@ Only base/recommended libraries are required to load the package. Install option
 learners explicitly before using them; ordered-outcome fitting also uses `nnet`.
 
 ## Data-free checks
+
+Run these commands inside `reproduction/` (from the repository root,
+first run `cd reproduction`):
 
 ```sh
 Rscript --vanilla scripts/public/check_environment.R minimal

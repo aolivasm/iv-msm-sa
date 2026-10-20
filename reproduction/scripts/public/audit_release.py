@@ -4,7 +4,7 @@ import hashlib
 import re
 import sys
 
-root = Path(__file__).resolve().parents[2]
+root = Path(__file__).resolve().parents[3]
 expected = root / 'SHA256SUMS'
 if not expected.is_file():
     raise SystemExit('SHA256SUMS is missing.')
@@ -31,7 +31,7 @@ for name in listed:
         raise SystemExit('Potential credential in ' + name)
     if p.suffix.lower() in {'.rds','.rda','.rdata','.dta','.sav','.parquet','.sqlite','.pem','.key'}:
         raise SystemExit('Unexpected data/credential format: ' + name)
-    if name.startswith('data/') and name != 'data/README.md':
+    if name.startswith('reproduction/data/') and name != 'reproduction/data/README.md':
         raise SystemExit('Unexpected participant input: ' + name)
 print('Verified',len(listed),'release checksums; no selected secret signatures or participant input files.')
 print('Generated local results are not release files. Never use git add . after running analyses.')

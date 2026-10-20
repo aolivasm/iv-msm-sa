@@ -22,8 +22,11 @@ jobs:
           R CMD build packages/ivmsm
           R CMD check --no-manual ivmsm_0.1.1.tar.gz
       - name: Public smoke tests
+        working-directory: reproduction
         run: Rscript --vanilla scripts/public/run_smoke_tests.R
       - name: Main results collection contract
+        working-directory: reproduction
         run: Rscript --vanilla tests/test_paper_collection.R
       - name: Code-only population target fixture
+        working-directory: reproduction
         run: Rscript --vanilla tests/test_code_only_targets.R
