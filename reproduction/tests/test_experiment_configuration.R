@@ -30,6 +30,9 @@ local({
     } else tasks <- if(p$engine=='continuous_bounds')e$stress_tasks() else e$tasks
     stopifnot(nrow(tasks)==p$tasks, !anyDuplicated(tasks$id),
               identical(as.integer(tasks$id),seq_len(p$tasks)))
+    if(p$engine=='binary_bounds')
+      stopifnot(system2(file.path(R.home('bin'),'Rscript'),
+                        c('--vanilla','scripts/tests.R'))==0L)
     if(grepl('^continuous_|^comparators_',key)) {
       stopifnot(all(tasks$seed==820000L+tasks$replication),
                 all(tasks$n==6000L),all(table(tasks$setting)==500L))

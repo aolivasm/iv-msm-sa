@@ -1,15 +1,61 @@
+# Run from a prepared binary workspace. No datasets, targets, or fits are generated.
 source('scripts/common.R')
-stopifnot(nrow(tasks)==2000,!anyDuplicated(tasks$seed),all(table(tasks$setting)==500),
- identical(config$Lambda,c(1.8,2,2.5,3)),identical(generate(tasks[1,],50),generate(tasks[1,],50)))
-pop<-readRDS('targets/population.rds');stopifnot(pop$max_refinement<1e-4,nrow(pop$targets)==16,
- all(pop$targets$lower<=pop$targets$upper),identical(config,pop$config))
-front<-readRDS('targets/frontier_audit.rds')$summary
-stopifnot(all(front$frontier<min(config$Lambda)),identical(front$a,config$settings$a),identical(front$b,config$settings$b))
-root<-tempfile('binary_checkpoint_unit_');dir.create(root)
-t<-tasks[1,,drop=FALSE];sig<-list(test=TRUE)
-z<-list(task=t,signature=sig,records=setNames(rep(list(list(success=FALSE,error='test failure')),2),config$methods))
-p<-file.path(root,'task_0001.rds');atomic(z,p);h<-tools::md5sum(p)
-run_task(1,root,sig,n=600L);stopifnot(identical(h,tools::md5sum(p)))
-stopifnot(inherits(try(check(z,t,list(wrong=TRUE)),silent=TRUE),'try-error'))
-unlink(root,recursive=TRUE)
-cat('UNIT TESTS PASSED: task mapping, unique seeds, targets, numerical compatibility audit, atomic checkpoint/resume.\n')
+stopifnot(nrow(tasks)==2000L, !anyDuplicated(tasks$seed),
+          all(table(tasks$setting)==500L),
+          identical(config$methods,'rkhs'),
+          identical(config$Lambda,c(1.8,2,2.5,3)))
+
+# Resume must return before generating data or fitting nuisance functions.
+generate <- function(...) stop('TEST GUARD: data generation is forbidden')
+fit_binary_cross_fitted_direct_rkhs_nuisances <-
+  function(...) stop('TEST GUARD: model fitting is forbidden')
+
+local({
+  root <- tempfile('binary-checkpoint-test-')
+  dir.create(root)
+  on.exit(unlink(root,recursive=TRUE))
+  t <- tasks[1,,drop=FALSE]
+  sig <- list(test=TRUE)
+  p <- file.path(root,'task_0001.rds')
+  expect_error <- function(expr) {
+    stopifnot(inherits(tryCatch({force(expr);NULL},error=identity),'error'))
+  }
+  record <- function(value) {
+    list(task=t,signature=sig,
+         records=setNames(rep(list(value),length(config$methods)),config$methods))
+  }
+  resume_unchanged <- function(z) {
+    atomic(z,p)
+    hash <- tools::md5sum(p)
+    returned <- run_task(1,root,sig)
+    stopifnot(identical(returned,z),identical(hash,tools::md5sum(p)),
+              !dir.exists(paste0(p,'.lock')))
+  }
+
+  # Failures are retained for inspection, not silently refitted.
+  failed <- record(list(success=FALSE,error='deliberate fixture failure'))
+  resume_unchanged(failed)
+  stopifnot(!readRDS(p)$records$rkhs$success)
+
+  # Synthetic endpoint records exercise checkpoint validation, not estimation.
+  successful <- record(list(success=TRUE,error='',fits=lapply(config$Lambda,function(L)
+    list(Lambda0=L,endpoint_intervals=data.frame(
+      endpoint=c('ate_lower','ate_upper'),estimate=c(-.1,.2),
+      standard_error=c(.01,.02))))))
+  resume_unchanged(successful)
+  expect_error(check(successful,t,list(wrong=TRUE)))
+  expect_error(check(successful,tasks[2,,drop=FALSE],sig))
+  invalid <- successful
+  names(invalid$records) <- 'unknown_learner'
+  expect_error(check(invalid,t,sig))
+  invalid <- successful
+  invalid$records <- c(invalid$records,invalid$records)
+  expect_error(check(invalid,t,sig))
+  invalid <- successful
+  invalid$records$rkhs$fits[[1]]$endpoint_intervals$standard_error[1] <- -1
+  expect_error(check(invalid,t,sig))
+  invalid <- successful
+  invalid$records$rkhs$fits[[1]]$Lambda0 <- 99
+  expect_error(check(invalid,t,sig))
+})
+cat('PASS: binary task mapping, single-learner fixtures, atomic resume, retained failures, invalid-checkpoint rejection; no simulations or fits.\n')
