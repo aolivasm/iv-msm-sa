@@ -1,0 +1,20 @@
+Package: ivmsm
+Title: Instrumental Variable Bounds under the Marginal Sensitivity Model
+Version: 0.1.1
+Authors@R: person("Antonio", "Olivas-Martinez", role = c("aut", "cre"),
+    email = "antonio.olivas@gmail.com")
+Description: Potential-outcome mean and treatment-effect bounds under marginal
+    sensitivity models with instrumental variables. Includes binary and ordered
+    outcomes, continuous-outcome restricted-class estimators, general finite
+    instrument probability interfaces, and outward confidence band calibration.
+    Statistical inference requires the regularity conditions in the accompanying
+    paper <https://arxiv.org/abs/2610.22513>.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.4.0)
+Imports: stats, utils, splines, graphics
+Suggests: nnet, mgcv, ranger, glmnet, xgboost, SuperLearner, hal9001, nloptr
+Collate: 'sharp_bounds_plugin.R' 'binary_outcome_bounds.R'
+    'binary_rkhs_gamma_nuisances.R' 'discrete_outcome_bounds.R'
+    'binary_continuum_band.R' 'binary_grid_band.R' 'finite_iv.R'
+    'finite_iv_continuous.R' 'finite_iv_binary.R' 'presentation.R' 'zzz.R'
