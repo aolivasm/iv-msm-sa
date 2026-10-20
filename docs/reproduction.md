@@ -31,26 +31,12 @@ Install the [fitting dependencies](installation.md) and
 Rscript scripts/paper.R plan
 ```
 
-All experiment settings are in
-[`main_experiments.R`](../reproduction/configurations/main_experiments.R).
-Five shared engines implement continuous bounds, binary bounds, their
-comparators, and compatibility testing. Sample sizes and sensitivity grids are
-configuration choices, not separate copies of the estimator.
+Choose an analysis: `continuous_bounds`, `binary_bounds`,
+`continuous_comparators`, `binary_comparators`, or `compatibility`.
+Each automatically includes the settings reported in the main text.
+There is no need to select separate sensitivity-value or sample-size batches.
+The plan lists the task IDs to run for each analysis.
 
-| Configuration | Main-text result | Tasks |
-|---|---|---:|
-| `continuous_L2_L3` | IV-MSM, n=6,000, sensitivity values 2 and 3 | 2,000 |
-| `continuous_L18_L25` | IV-MSM, n=6,000, settings 1–3, values 1.8 and 2.5 | 1,500 |
-| `binary_bounds` | IV-MSM, n=6,000, all four values | 2,000 |
-| `comparators_L2_L3` | Tan and Dorn, n=6,000, values 2 and 3 | 2,000 |
-| `comparators_L18_L25` | Tan and Dorn, values 1.8 and 2.5 | 2,000 |
-| `binary_comparators` | Tan and Dorn, n=6,000, all four values | 2,000 |
-| `compatibility_6000` | Both outcomes; values 1 and 1.1 | 5,000 |
-| `compatibility_12000` | Both outcomes; values 1 and 1.1 | 5,000 |
-| `compatibility_binary_24000` | Binary setting 4; value 1 | 500 |
-
-Each setting uses 500 replications. Compatibility tasks include the paper's
-null controls. A task is one dataset, not one endpoint or sensitivity value.
 Generate the population targets needed by the endpoint studies first (numerical
 integration, potentially expensive, but no simulated datasets):
 
@@ -60,26 +46,21 @@ Rscript scripts/paper.R experiment binary_bounds targets
 Rscript scripts/compute_paper_targets.R
 ```
 
-The `continuous_bounds` and `continuous_comparators` analysis names each run
-both sensitivity configurations, preserving the paper's original fit ordering.
-For `continuous_bounds`, task IDs 1,501–2,000 apply only to the 2-and-3
-configuration: setting 4 at 1.8 and 2.5 is not reported for IV-MSM.
-Select a configuration name to run just that batch. In particular, the same
-compatibility engine handles all three sample-size configurations.
-
-Workspaces, configuration RDS files, and integrity manifests are generated locally
-under `results/work/CONFIGURATION/`; they are not distributed. Source or
-configuration changes cannot silently reuse existing checkpoints. For an analysis, explicitly
-run preflight, individual task IDs, then collection:
+For each analysis, run preflight, all task IDs shown by the plan, then collection:
 
 ```sh
 Rscript scripts/paper.R experiment continuous_bounds preflight
 Rscript scripts/paper.R experiment continuous_bounds task 1
-# Run the remaining task IDs with your chosen scheduler.
+# Run every remaining task ID shown by the plan with your chosen scheduler.
 Rscript scripts/paper.R experiment continuous_bounds collect
 ```
 
+Use `compatibility` in the same commands to run all main-text compatibility
+experiments, without selecting sample sizes separately.
+
 These commands can be expensive. They do not submit jobs automatically.
+Workspaces and checkpoints are created locally under `results/work/`.
+Source or configuration changes cannot silently reuse existing checkpoints.
 Use fresh checkpoints; do not import historical cluster signatures. Original
 drivers run only RKHS, the fixed spline threshold class, and X-adjusted
 competitors. Supplementary learner/class comparisons are not run. Seeds,
@@ -87,7 +68,7 @@ original outcome-specific tuning, and estimating
 equations are preserved. Do not replace them with newer package defaults and
 call the result an exact reproduction.
 
-After collecting all nine configurations:
+After collecting all five analyses:
 
 ```sh
 Rscript scripts/collect_paper_results.R results/paper_reproduction

@@ -1,4 +1,9 @@
 # Configuration and dispatch checks only: no estimation or population integration.
+plan <- system2(file.path(R.home('bin'),'Rscript'),
+                c('scripts/paper.R','plan'),stdout=TRUE)
+stopifnot(!any(grepl('continuous_L|comparators_L|compatibility_[0-9]',plan)),
+          sum(grepl('^ *compatibility ',plan))==1L,
+          sum(grepl('^ *continuous_bounds ',plan))==1L)
 source('scripts/prepare_experiments.R')
 local({
   original <- getwd()
